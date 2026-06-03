@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public float speed = 5f;
+    public float speed = 0.2f;
     public float jumpForce = 7f;
 
     private Rigidbody2D rb;
@@ -19,6 +19,7 @@ public class Player : MonoBehaviour
     {
         horizontalInput = Input.GetAxisRaw("Horizontal");
         Jump();
+        CheckGround();
     }
 
     void FixedUpdate()
@@ -28,9 +29,19 @@ public class Player : MonoBehaviour
 
     void Jump()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && onGround)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
+    }
+
+    public bool onGround;
+    public Transform groundCheck;
+    public float checkRadius = 0.5f;
+    public LayerMask Ground;
+    
+    void CheckGround()
+    {
+        onGround = Physics2D.OverlapCircle(groundCheck.position, checkRadius, Ground);
     }
 }
