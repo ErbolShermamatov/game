@@ -7,16 +7,19 @@ public class PlayerShooting : MonoBehaviour
     public Transform firePoint;
     public GameObject arrowPrefab;
 
+    public float fireRate = 0.6f;
+    private float nextFireTime = 0f;
+
     public float arrowBaseSpeed = 25f;
-    
-    public float aimDelayAfterStop = 0.15f; 
+
+    public float aimDelayAfterStop = 0.15f;
 
     private Animator anim;
     private PlayerAiming playerAiming;
     private Vector2 queuedLaunchVelocity;
 
     private bool isTriggeringShot = false;
-    private float stopTimer = 0f; 
+    private float stopTimer = 0f;
 
     public bool IsFiringNow
     {
@@ -50,11 +53,11 @@ public class PlayerShooting : MonoBehaviour
 
         if (isMoving)
         {
-            stopTimer = 0f; 
+            stopTimer = 0f;
         }
         else
         {
-            stopTimer += Time.deltaTime; 
+            stopTimer += Time.deltaTime;
         }
 
         if (stopTimer < aimDelayAfterStop || IsFiringNow)
@@ -66,11 +69,13 @@ public class PlayerShooting : MonoBehaviour
             anim.SetBool("IsAiming", playerAiming.IsAiming());
         }
 
-        if (playerAiming.IsAiming() && Input.GetButtonDown("Fire1"))
+        if (playerAiming.IsAiming() && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
         {
             if (IsFiringNow) return;
 
             isTriggeringShot = true;
+
+            nextFireTime = Time.time + fireRate;
 
             RotateTowardsMouse();
 

@@ -6,9 +6,10 @@ public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 6f;
     public float jumpForce = 12f;
+    public ParticleSystem runDust;
 
     private PlayerAiming playerAiming;
-    private PlayerShooting playerShooting; 
+    private PlayerShooting playerShooting;
     private Rigidbody2D rb;
     private Animator anim;
     private float horizontalInput;
@@ -17,7 +18,7 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         playerAiming = GetComponent<PlayerAiming>();
-        playerShooting = GetComponent<PlayerShooting>(); 
+        playerShooting = GetComponent<PlayerShooting>();
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
     }
@@ -28,12 +29,29 @@ public class PlayerMovement : MonoBehaviour
         {
             horizontalInput = 0f;
             anim.SetFloat("Speed", 0f);
-            return; 
+
+            if (runDust != null && runDust.isPlaying) runDust.Stop();
+
+            return;
         }
 
         horizontalInput = Input.GetAxisRaw("Horizontal");
+        bool isMoving = Mathf.Abs(horizontalInput) > 0.1f;
+
         anim.SetFloat("Speed", Mathf.Abs(horizontalInput));
         anim.SetBool("IsGrounded", isGrounded);
+
+        if (runDust != null)
+        {
+            if (isGrounded && isMoving)
+            {
+                if (!runDust.isPlaying) runDust.Play();
+            }
+            else
+            {
+                if (runDust.isPlaying) runDust.Stop();
+            }
+        }
 
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
