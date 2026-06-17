@@ -4,15 +4,11 @@ using UnityEngine;
 
 public class PlayerShooting : MonoBehaviour
 {
-    [Header("References")]
     public Transform firePoint;
     public GameObject arrowPrefab;
 
-    [Header("Ballistic Settings")]
     public float arrowBaseSpeed = 25f;
     
-    [Header("Aiming Settings")]
-    [Tooltip("Задержка перед натяжением лука после остановки. Спасает от мигания анимации при смене кнопок A и D.")]
     public float aimDelayAfterStop = 0.15f; 
 
     private Animator anim;
@@ -52,7 +48,6 @@ public class PlayerShooting : MonoBehaviour
         float horizontalMove = Input.GetAxisRaw("Horizontal");
         bool isMoving = Mathf.Abs(horizontalMove) > 0.1f;
 
-        // Таймер остановки
         if (isMoving)
         {
             stopTimer = 0f; 
