@@ -7,20 +7,30 @@ public class PlayerMovement : MonoBehaviour
     public float moveSpeed = 6f;
     public float jumpForce = 12f;
 
+    private PlayerAiming playerAiming;
+    private PlayerShooting playerShooting; 
     private Rigidbody2D rb;
     private Animator anim;
     private float horizontalInput;
-    private bool facingRight = true;
     private bool isGrounded;
 
     void Start()
     {
+        playerAiming = GetComponent<PlayerAiming>();
+        playerShooting = GetComponent<PlayerShooting>(); 
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
     }
 
     void Update()
     {
+        if (playerShooting != null && playerShooting.IsFiringNow)
+        {
+            horizontalInput = 0f;
+            anim.SetFloat("Speed", 0f);
+            return; 
+        }
+
         horizontalInput = Input.GetAxisRaw("Horizontal");
         anim.SetFloat("Speed", Mathf.Abs(horizontalInput));
         anim.SetBool("IsGrounded", isGrounded);
@@ -31,21 +41,28 @@ public class PlayerMovement : MonoBehaviour
             isGrounded = false;
         }
 
-        if (horizontalInput > 0 && !facingRight) Flip();
-        else if (horizontalInput < 0 && facingRight) Flip();
+        Vector3 currentScale = transform.localScale;
+        if (horizontalInput > 0)
+        {
+            currentScale.x = Mathf.Abs(currentScale.x);
+        }
+        else if (horizontalInput < 0)
+        {
+            currentScale.x = -Mathf.Abs(currentScale.x);
+        }
+        transform.localScale = currentScale;
     }
 
     void FixedUpdate()
     {
-        rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
-    }
-
-    void Flip()
-    {
-        facingRight = !facingRight;
-        Vector3 scaler = transform.localScale;
-        scaler.x *= -1;
-        transform.localScale = scaler;
+        if (playerShooting != null && playerShooting.IsFiringNow)
+        {
+            rb.velocity = new Vector2(0f, rb.velocity.y);
+        }
+        else
+        {
+            rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
+        }
     }
 
     private void OnCollisionStay2D(Collision2D collision)
