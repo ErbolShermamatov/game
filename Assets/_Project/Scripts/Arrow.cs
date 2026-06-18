@@ -31,8 +31,13 @@ public class Arrow : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (!collision.CompareTag("Player"))
+        if (collision.CompareTag("Player")) return;
+
+        EnemyHealth enemy = collision.GetComponent<EnemyHealth>();
+
+        if (enemy != null)
         {
+            enemy.TakeDamage(1, transform.position);
             Destroy(gameObject);
         }
     }
