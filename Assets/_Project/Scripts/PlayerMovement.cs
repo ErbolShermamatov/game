@@ -19,7 +19,8 @@ public class PlayerMovement : MonoBehaviour
 
     private float horizontalInput;
     private bool isGrounded;
-    private float knockbackTimer = 0f;
+    
+    public float knockbackTimer = 0f;
 
     void Start()
     {
@@ -39,8 +40,6 @@ public class PlayerMovement : MonoBehaviour
 
         Vector2 rayStart = new Vector2(coll.bounds.center.x, coll.bounds.min.y + 0.05f);
         isGrounded = Physics2D.Raycast(rayStart, Vector2.down, groundCheckLength, groundLayer);
-
-        Debug.DrawRay(rayStart, Vector2.down * groundCheckLength, isGrounded ? Color.green : Color.red);
 
         if (playerShooting != null && playerShooting.IsFiringNow)
         {
@@ -93,20 +92,6 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
-        }
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
-        {
-            knockbackTimer = 0.3f; 
-            
-            Vector2 pushDir = (transform.position - collision.transform.position).normalized;
-            pushDir.y = 0.5f;
-            
-            rb.velocity = Vector2.zero;
-            rb.AddForce(pushDir * 10f, ForceMode2D.Impulse);
         }
     }
 }

@@ -14,6 +14,11 @@ public class EnemyAI : MonoBehaviour
     public LayerMask groundLayer;
     public float wallCheckDistance = 0.6f;
 
+    public float attackRange = 1.2f;
+    public float attackCooldown = 1.5f;
+    private float nextAttackTime = 0f;
+    private bool isAttacking = false;
+
     private Rigidbody2D rb;
     private Animator anim;
     private bool isChasing = false;
@@ -35,15 +40,34 @@ public class EnemyAI : MonoBehaviour
         if (knockbackTimer > 0f)
         {
             knockbackTimer -= Time.deltaTime;
-            return;
+            isAttacking = false;
+            return; 
         }
 
         if (player == null) return;
 
-        Vector2 directionToPlayer = (player.position - transform.position).normalized;
-        float angleToPlayer = Vector2.Angle(new Vector2(transform.localScale.x, 0), directionToPlayer);
+        if (isAttacking)
+        {
+            rb.velocity = new Vector2(0, rb.velocity.y);
+            return;
+        }
+
         float distance = Vector2.Distance(transform.position, player.position);
 
+        if (distance <= attackRange)
+        {
+            if (Time.time >= nextAttackTime)
+            {
+                StartAttack();
+            }
+            rb.velocity = new Vector2(0, rb.velocity.y);
+            anim.SetFloat("Speed", 0f);
+            return; 
+        }
+
+        Vector2 directionToPlayer = (player.position - transform.position).normalized;
+        float angleToPlayer = Vector2.Angle(new Vector2(transform.localScale.x, 0), directionToPlayer);
+        
         bool canSeePlayer = (distance < visionDistance && angleToPlayer < 45f);
 
         if (canSeePlayer)
@@ -54,10 +78,7 @@ public class EnemyAI : MonoBehaviour
         else if (isChasing)
         {
             currentMemoryTime -= Time.deltaTime;
-            if (currentMemoryTime <= 0f)
-            {
-                isChasing = false;
-            }
+            if (currentMemoryTime <= 0f) isChasing = false;
         }
 
         Vector2 facingDir = new Vector2(transform.localScale.x, 0);
@@ -71,6 +92,40 @@ public class EnemyAI : MonoBehaviour
 
         if (isChasing) Chase();
         else Patrol();
+    }
+
+    void StartAttack()
+    {
+        isAttacking = true;
+        
+        float dir = Mathf.Sign(player.position.x - transform.position.x);
+        transform.localScale = new Vector3(dir, 1, 1);
+
+        int randomAttack = Random.Range(0, 2);
+        if (randomAttack == 0) anim.SetTrigger("Attack1");
+        else anim.SetTrigger("Attack2");
+    }
+
+
+   public void StrikePlayer()
+    {
+        if (player == null) return;
+        
+        float distance = Vector2.Distance(transform.position, player.position);
+        if (distance <= attackRange + 0.3f)
+        {
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(1, transform);
+            }
+        }
+    }
+
+    public void FinishAttack()
+    {
+        isAttacking = false;
+        nextAttackTime = Time.time + attackCooldown;
     }
 
     void Patrol()
@@ -106,14 +161,23 @@ public class EnemyAI : MonoBehaviour
 
         Gizmos.color = Color.blue;
         Gizmos.DrawLine(transform.position, (Vector2)transform.position + direction * wallCheckDistance);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionStay2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Player"))
         {
             isChasing = true;
             currentMemoryTime = chaseMemoryTime; 
+
+            PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(1, transform);
+            }
         }
     }
 }

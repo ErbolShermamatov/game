@@ -5,13 +5,16 @@ using UnityEngine;
 public class EnemyHealth : MonoBehaviour
 {
     public int maxHealth = 3;
-    public float knockbackForce = 5f;
+
+    public float knockbackForceX = 5f;
+    public float knockbackForceY = 2f;
+
     private int currentHealth;
 
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private Color originalColor;
-    
+
     private EnemyAI enemyAI;
 
     void Start()
@@ -41,17 +44,13 @@ public class EnemyHealth : MonoBehaviour
     private void ApplyKnockback(Vector2 sourcePos)
     {
         if (rb == null) return;
-
         if (enemyAI != null)
         {
             enemyAI.knockbackTimer = 0.3f;
         }
-
-        Vector2 direction = (Vector2)transform.position - sourcePos;
-        direction = direction.normalized;
-
+        float knockbackDirection = transform.position.x < sourcePos.x ? -1f : 1f;
         rb.velocity = Vector2.zero;
-        rb.AddForce(new Vector2(direction.x, 0.5f) * knockbackForce, ForceMode2D.Impulse);
+        rb.AddForce(new Vector2(knockbackForceX * knockbackDirection, knockbackForceY), ForceMode2D.Impulse);
     }
 
     public void TakeDamage(int damage)
@@ -94,7 +93,7 @@ public class EnemyHealth : MonoBehaviour
     {
         if (enemyAI != null) enemyAI.enabled = false;
 
-        if (rb != null) 
+        if (rb != null)
         {
             rb.velocity = Vector2.zero;
             rb.simulated = false;
@@ -104,8 +103,12 @@ public class EnemyHealth : MonoBehaviour
         if (coll != null) coll.enabled = false;
 
         Animator anim = GetComponent<Animator>();
-        if (anim != null) anim.SetFloat("Speed", 0f);
-        
+        if (anim != null)
+        {
+            anim.Play("Warrior_Idle");
+            anim.SetFloat("Speed", 0f);
+        }
+
         StartCoroutine(FadeOutDeath());
     }
 

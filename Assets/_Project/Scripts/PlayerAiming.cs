@@ -78,6 +78,8 @@ public class PlayerAiming : MonoBehaviour
         }
 
         currentReticle.transform.position = targetAimPosition;
+
+        currentReticle.transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
     void LateUpdate()

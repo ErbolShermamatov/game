@@ -4878,6 +4878,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6991344544762998552}
   - component: {fileID: 5456082000603792968}
+  - component: {fileID: 3100867873083486373}
   - component: {fileID: 6324207095925437271}
   - component: {fileID: 5390241038470128317}
   - component: {fileID: 1786650640979788879}
@@ -4960,6 +4961,22 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &3100867873083486373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7543528542033808807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e1e9f2fe96a78e43aeae56db903b575, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 3
+  knockbackForceX: 8
+  knockbackForceY: 2
+  invulnerabilityTime: 1
 --- !u!114 &6324207095925437271
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4989,7 +5006,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df1c682ab5c7a034ca1cec663bb8e309, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  reticlePrefab: {fileID: 4119723894608289542, guid: 36b71007b6c1128408bd8d9cbc4b0847, type: 3}
+  reticlePrefab: {fileID: 8498638272854253342, guid: 23cc3baa5bf665947af4c40650989b94, type: 3}
   maxAimRadius: 5
   obstacleLayer:
     serializedVersion: 2
@@ -5008,8 +5025,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 10
-  jumpForce: 12
+  jumpForce: 15
   runDust: {fileID: 70462733171559014}
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  groundCheckLength: 0.2
+  knockbackTimer: 0
 --- !u!50 &2046508228243053087
 Rigidbody2D:
   serializedVersion: 4
@@ -5026,7 +5048,7 @@ Rigidbody2D:
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 4
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: db545189bc96cef4baecbe59f463989b, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
