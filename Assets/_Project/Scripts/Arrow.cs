@@ -7,6 +7,10 @@ public class Arrow : MonoBehaviour
     public float lifetime = 5f;
     private Rigidbody2D rb;
     private bool isLaunched = false;
+    private bool isStuck = false;
+    public float embedDepth = 0.4f;
+
+    private Coroutine deathTimer;
 
     void Awake()
     {
@@ -17,12 +21,19 @@ public class Arrow : MonoBehaviour
     {
         rb.velocity = velocity;
         isLaunched = true;
-        Destroy(gameObject, lifetime);
+
+        deathTimer = StartCoroutine(DestroyAfterTime());
+    }
+
+    IEnumerator DestroyAfterTime()
+    {
+        yield return new WaitForSeconds(lifetime);
+        Destroy(gameObject);
     }
 
     void FixedUpdate()
     {
-        if (isLaunched && rb.velocity.magnitude > 0.1f)
+        if (isLaunched && !isStuck && rb.velocity.magnitude > 0.1f)
         {
             float angle = Mathf.Atan2(rb.velocity.y, rb.velocity.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0f, 0f, angle);
@@ -31,7 +42,15 @@ public class Arrow : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (isStuck) return;
+
         if (collision.CompareTag("Player")) return;
+
+        if (collision.CompareTag("Ground"))
+        {
+            StickIntoGround(collision.transform);
+            return;
+        }
 
         EnemyHealth enemy = collision.GetComponent<EnemyHealth>();
 
@@ -40,5 +59,26 @@ public class Arrow : MonoBehaviour
             enemy.TakeDamage(1, transform.position);
             Destroy(gameObject);
         }
+    }
+
+    void StickIntoGround(Transform groundTransform)
+    {
+        isStuck = true;
+        isLaunched = false;
+
+        if (deathTimer != null)
+        {
+            StopCoroutine(deathTimer);
+        }
+
+        transform.position += transform.right * embedDepth;
+
+        GetComponent<SpriteRenderer>().sortingOrder = -3;
+
+        rb.velocity = Vector2.zero;
+        rb.bodyType = RigidbodyType2D.Kinematic; 
+
+        transform.SetParent(groundTransform);
+        gameObject.tag = "CollectibleArrow"; 
     }
 }

@@ -57,6 +57,14 @@ public class PlayerAiming : MonoBehaviour
             angle = (angle < 90f) ? minDeadZone : maxDeadZone;
         }
 
+        float minDownDeadZone = -90f - verticalDeadzoneHalfWidth;
+        float maxDownDeadZone = -90f + verticalDeadzoneHalfWidth;
+
+        if (angle > minDownDeadZone && angle < maxDownDeadZone)
+        {
+            angle = (angle < -90f) ? minDownDeadZone : maxDownDeadZone;
+        }
+
         float radians = angle * Mathf.Deg2Rad;
         Vector3 constrainedOffset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0f) * distance;
 
