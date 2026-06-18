@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -14,10 +15,11 @@ public class PlayerHealth : MonoBehaviour
     public float invulnerabilityTime = 1f;
     private bool isInvulnerable = false;
 
+    public Image healthBarFill;
+
     private Rigidbody2D rb;
     private SpriteRenderer spriteRend;
     private Animator anim;
-
 
     void Start()
     {
@@ -26,6 +28,8 @@ public class PlayerHealth : MonoBehaviour
         spriteRend = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
         movementScript = GetComponent<PlayerMovement>();
+
+        UpdateHealthBar();
     }
 
     public void TakeDamage(int damage, Transform enemyTransform)
@@ -33,6 +37,7 @@ public class PlayerHealth : MonoBehaviour
         if (isDead || isInvulnerable) return;
 
         currentHealth -= damage;
+        UpdateHealthBar();
 
         if (currentHealth <= 0)
         {
@@ -42,6 +47,14 @@ public class PlayerHealth : MonoBehaviour
         {
             ApplyKnockback(enemyTransform);
             StartCoroutine(DamageEffect());
+        }
+    }
+
+    void UpdateHealthBar()
+    {
+        if (healthBarFill != null)
+        {
+            healthBarFill.fillAmount = (float)currentHealth / maxHealth;
         }
     }
 
@@ -60,7 +73,6 @@ public class PlayerHealth : MonoBehaviour
         isInvulnerable = true;
 
         int blinkCount = 3;
-
         float blinkDuration = invulnerabilityTime / (blinkCount * 2);
 
         for (int i = 0; i < blinkCount; i++)
@@ -73,13 +85,15 @@ public class PlayerHealth : MonoBehaviour
         }
 
         spriteRend.color = Color.white;
-
         isInvulnerable = false;
     }
 
     void Die()
     {
         isDead = true;
+
+        currentHealth = 0;
+        UpdateHealthBar();
 
         rb.velocity = Vector2.zero;
         rb.simulated = false;
@@ -95,6 +109,7 @@ public class PlayerHealth : MonoBehaviour
 
         StartCoroutine(FadeOutRoutine());
     }
+
     IEnumerator FadeOutRoutine()
     {
         float fadeDuration = 2f;
@@ -105,11 +120,8 @@ public class PlayerHealth : MonoBehaviour
         while (timer < fadeDuration)
         {
             timer += Time.deltaTime;
-
             float currentAlpha = Mathf.Lerp(1f, 0f, timer / fadeDuration);
-
             spriteRend.color = new Color(startColor.r, startColor.g, startColor.b, currentAlpha);
-
             yield return null;
         }
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
