@@ -5,7 +5,7 @@ using UnityEngine;
 public class EnemyHealth : MonoBehaviour
 {
     public int maxHealth = 3;
-
+    public GameObject arrowLootPrefab;
     public float knockbackForceX = 5f;
     public float knockbackForceY = 2f;
 
@@ -130,6 +130,10 @@ public class EnemyHealth : MonoBehaviour
             yield return null;
         }
 
+        if (arrowLootPrefab != null)
+        {
+            Instantiate(arrowLootPrefab, transform.position, Quaternion.identity);
+        }
         Destroy(gameObject);
     }
 }

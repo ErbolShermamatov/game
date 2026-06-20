@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class PlayerShooting : MonoBehaviour
 {
@@ -11,8 +12,10 @@ public class PlayerShooting : MonoBehaviour
     private float nextFireTime = 0f;
 
     public float arrowBaseSpeed = 25f;
-
     public float aimDelayAfterStop = 0.15f;
+
+    public int currentArrows = 10;
+    public TextMeshProUGUI ammoText;
 
     private Animator anim;
     private PlayerAiming playerAiming;
@@ -36,6 +39,7 @@ public class PlayerShooting : MonoBehaviour
     {
         anim = GetComponent<Animator>();
         playerAiming = GetComponent<PlayerAiming>();
+        UpdateAmmoUI();
     }
 
     void Update()
@@ -69,16 +73,14 @@ public class PlayerShooting : MonoBehaviour
             anim.SetBool("IsAiming", playerAiming.IsAiming());
         }
 
-        if (playerAiming.IsAiming() && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
+        if (playerAiming.IsAiming() && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime && currentArrows > 0)
         {
             if (IsFiringNow) return;
 
             isTriggeringShot = true;
-
             nextFireTime = Time.time + fireRate;
 
             RotateTowardsMouse();
-
             queuedLaunchVelocity = CalculateBallisticVelocity(firePoint.position, playerAiming.GetAimPosition());
 
             anim.SetTrigger("Shoot");
@@ -104,6 +106,9 @@ public class PlayerShooting : MonoBehaviour
 
     public void SpawnArrowEvent()
     {
+        currentArrows--;
+        UpdateAmmoUI();
+
         GameObject arrowGO = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
         Arrow arrow = arrowGO.GetComponent<Arrow>();
 
@@ -117,6 +122,24 @@ public class PlayerShooting : MonoBehaviour
         if (arrow != null)
         {
             arrow.LaunchBallistic(queuedLaunchVelocity);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("CollectibleArrow"))
+        {
+            currentArrows++;
+            UpdateAmmoUI();
+            Destroy(collision.gameObject);
+        }
+    }
+
+    void UpdateAmmoUI()
+    {
+        if (ammoText != null)
+        {
+            ammoText.text = "x" + currentArrows;
         }
     }
 

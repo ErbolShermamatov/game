@@ -79,6 +79,10 @@ public class Arrow : MonoBehaviour
         rb.bodyType = RigidbodyType2D.Kinematic; 
 
         transform.SetParent(groundTransform);
-        gameObject.tag = "CollectibleArrow"; 
+        gameObject.tag = "CollectibleArrow";
+        GetComponent<Collider2D>().isTrigger = true; 
+
+        Collider2D playerCol = FindObjectOfType<PlayerShooting>().GetComponent<Collider2D>();
+        Physics2D.IgnoreCollision(playerCol, GetComponent<Collider2D>(), false);
     }
 }

@@ -18731,12 +18731,12 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 6d5744fe45ab0464286e19d967825811, type: 3}
   - {fileID: 21300000, guid: 7c753f134289ab149be6c1cc89781405, type: 3}
   cloudContainer: {fileID: 1037653444}
-  startX: -1200
-  minY: -210
-  maxY: 450
+  startX: -1000
+  minY: -190
+  maxY: 500
   minSpeed: 20
   maxSpeed: 60
-  minSpawnTime: 3
+  minSpawnTime: 2
   maxSpawnTime: 10
 --- !u!1 &1994890158
 GameObject:
