@@ -7,7 +7,7 @@ public class PlayerShooting : MonoBehaviour
     public GameObject arrowPrefab;
     public float fireRate = 0.6f;
     public float arrowBaseSpeed = 25f;
-    
+
     public int currentArrows = 10;
     public TextMeshProUGUI ammoText;
 
@@ -17,7 +17,7 @@ public class PlayerShooting : MonoBehaviour
     private PlayerAiming playerAiming;
     private Vector2 queuedLaunchVelocity;
     private Camera mainCam;
-    
+
     private float nextFireTime = 0f;
     private float stopTimer = 0f;
 
@@ -67,7 +67,7 @@ public class PlayerShooting : MonoBehaviour
 
     private void HandleShootingInput()
     {
-        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime && currentArrows > 0)
+        if (Input.GetButtonDown("Fire1") && playerAiming.IsAiming() && Time.time >= nextFireTime && currentArrows > 0)
         {
             nextFireTime = Time.time + fireRate;
 
@@ -82,11 +82,11 @@ public class PlayerShooting : MonoBehaviour
     {
         Vector3 mouseWorldPos = mainCam.ScreenToWorldPoint(Input.mousePosition);
         float directionToMouse = mouseWorldPos.x - transform.position.x;
-        
+
         Vector3 currentScale = transform.localScale;
         if (directionToMouse > 0.1f) currentScale.x = Mathf.Abs(currentScale.x);
         else if (directionToMouse < -0.1f) currentScale.x = -Mathf.Abs(currentScale.x);
-        
+
         transform.localScale = currentScale;
     }
 
@@ -100,7 +100,7 @@ public class PlayerShooting : MonoBehaviour
 
         Collider2D playerCollider = GetComponent<Collider2D>();
         Collider2D arrowCollider = arrowGO.GetComponent<Collider2D>();
-        
+
         if (playerCollider != null && arrowCollider != null)
         {
             Physics2D.IgnoreCollision(playerCollider, arrowCollider);

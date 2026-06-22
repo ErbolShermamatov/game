@@ -135,7 +135,12 @@ public class EnemyHealth : MonoBehaviour
 
         if (arrowLootPrefab != null)
         {
-            Instantiate(arrowLootPrefab, transform.position, Quaternion.identity);
+            int dropCount = Random.Range(1, 4);
+
+            for (int i = 0; i < dropCount; i++)
+            {
+                Instantiate(arrowLootPrefab, transform.position, Quaternion.identity);
+            }
         }
 
         Destroy(gameObject);
