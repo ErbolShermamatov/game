@@ -1,32 +1,35 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Arrow : MonoBehaviour
 {
     public float lifetime = 5f;
-    private Rigidbody2D rb;
-    private bool isLaunched = false;
     public bool isEnemyArrow = false;
-    private bool isStuck = false;
     public float embedDepth = 0.4f;
 
+    private Rigidbody2D rb;
+    private Collider2D col;
+    private SpriteRenderer spriteRenderer;
+
+    private bool isLaunched = false;
+    private bool isStuck = false;
     private Coroutine deathTimer;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        col = GetComponent<Collider2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     public void LaunchBallistic(Vector2 velocity)
     {
         rb.velocity = velocity;
         isLaunched = true;
-
         deathTimer = StartCoroutine(DestroyAfterTime());
     }
 
-    IEnumerator DestroyAfterTime()
+    private IEnumerator DestroyAfterTime()
     {
         yield return new WaitForSeconds(lifetime);
         Destroy(gameObject);
@@ -51,22 +54,21 @@ public class Arrow : MonoBehaviour
             return;
         }
 
-        if (isEnemyArrow)
+        if (collision.CompareTag("Player"))
         {
-            if (collision.CompareTag("Player"))
-            {
-                PlayerHealth playerHealth = collision.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
-                {
-                    playerHealth.TakeDamage(1, transform);
-                    Destroy(gameObject);
-                }
-            }
-        }
-        else
-        {
-            if (collision.CompareTag("Player")) return;
+            if (!isEnemyArrow) return;
 
+            PlayerHealth playerHealth = collision.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(1, transform);
+                Destroy(gameObject);
+            }
+            return;
+        }
+
+        if (!isEnemyArrow)
+        {
             EnemyHealth enemy = collision.GetComponent<EnemyHealth>();
             if (enemy != null)
             {
@@ -76,28 +78,28 @@ public class Arrow : MonoBehaviour
         }
     }
 
-    void StickIntoGround(Transform groundTransform)
+    private void StickIntoGround(Transform groundTransform)
     {
         isStuck = true;
         isLaunched = false;
 
-        if (deathTimer != null)
-        {
-            StopCoroutine(deathTimer);
-        }
+        if (deathTimer != null) StopCoroutine(deathTimer);
 
         transform.position += transform.right * embedDepth;
-
-        GetComponent<SpriteRenderer>().sortingOrder = -3;
+        spriteRenderer.sortingOrder = -3;
 
         rb.velocity = Vector2.zero;
         rb.bodyType = RigidbodyType2D.Kinematic; 
 
         transform.SetParent(groundTransform);
         gameObject.tag = "CollectibleArrow";
-        GetComponent<Collider2D>().isTrigger = true; 
+        col.isTrigger = true; 
 
-        Collider2D playerCol = FindObjectOfType<PlayerShooting>().GetComponent<Collider2D>();
-        Physics2D.IgnoreCollision(playerCol, GetComponent<Collider2D>(), false);
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            Collider2D playerCol = player.GetComponent<Collider2D>();
+            if (playerCol != null) Physics2D.IgnoreCollision(playerCol, col, false);
+        }
     }
 }

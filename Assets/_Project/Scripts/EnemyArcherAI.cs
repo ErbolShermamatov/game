@@ -32,75 +32,90 @@ public class EnemyArcherAI : MonoBehaviour
     {
         if (player == null || isDead) return;
 
-        float distance = Vector2.Distance(transform.position, player.position);
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 
-        bool isGrounded = false;
-        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, Vector2.down, groundCheckDistance);
-        
-        foreach (RaycastHit2D hit in hits)
+        if (CheckGrounded() && distanceToPlayer <= runAwayRange)
         {
-            if (hit.collider.CompareTag("Ground"))
-            {
-                isGrounded = true;
-                break; 
-            }
-        }
-
-        if (isGrounded && distance <= runAwayRange)
-        {
-            if (isAiming || isShooting)
-            {
-                isAiming = false;
-                isShooting = false;
-                anim.SetTrigger("CancelAim");
-            }
-            
-            anim.SetBool("IsRunning", true);
-
-            float runDir = Mathf.Sign(transform.position.x - player.position.x);
-            transform.localScale = new Vector3(runDir, 1, 1);
-            transform.position += new Vector3(runDir * runSpeed * Time.deltaTime, 0, 0);
-            
-            return; 
+            HandleFleeing();
         }
         else
         {
             anim.SetBool("IsRunning", false);
+            HandleCombat(distanceToPlayer);
         }
+    }
 
-        if (distance <= visionRange + 2f && !isShooting && !isAiming) 
+    private bool CheckGrounded()
+    {
+        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, Vector2.down, groundCheckDistance);
+        foreach (RaycastHit2D hit in hits)
+        {
+            if (hit.collider.CompareTag("Ground")) return true;
+        }
+        return false;
+    }
+
+    private void HandleFleeing()
+    {
+        CancelActionIfNeeded();
+        
+        anim.SetBool("IsRunning", true);
+
+        float runDir = Mathf.Sign(transform.position.x - player.position.x);
+        transform.localScale = new Vector3(runDir, 1, 1);
+        transform.position += new Vector3(runDir * runSpeed * Time.deltaTime, 0, 0);
+    }
+
+    private void HandleCombat(float distanceToPlayer)
+    {
+        if (distanceToPlayer <= visionRange + 2f && !isShooting && !isAiming) 
         {
             float dir = Mathf.Sign(player.position.x - transform.position.x);
             if (dir != 0) transform.localScale = new Vector3(dir, 1, 1);
         }
 
-        if (distance <= visionRange)
+        if (distanceToPlayer <= visionRange)
         {
             if (!isAiming && !isShooting) 
             {
-                isAiming = true;
-                anim.SetTrigger("Aim");
-                aimTimer = aimDelay;
+                StartAiming();
             }
             else if (isAiming)
             {
-                aimTimer -= Time.deltaTime;
-                if (aimTimer <= 0f)
-                {
-                    isAiming = false;
-                    isShooting = true; 
-                    anim.SetTrigger("Shoot");
-                }
+                ProcessAiming();
             }
         }
         else
         {
-            if (isAiming || isShooting)
-            {
-                isAiming = false;
-                isShooting = false;
-                anim.SetTrigger("CancelAim");
-            }
+            CancelActionIfNeeded();
+        }
+    }
+
+    private void StartAiming()
+    {
+        isAiming = true;
+        anim.SetTrigger("Aim");
+        aimTimer = aimDelay;
+    }
+
+    private void ProcessAiming()
+    {
+        aimTimer -= Time.deltaTime;
+        if (aimTimer <= 0f)
+        {
+            isAiming = false;
+            isShooting = true; 
+            anim.SetTrigger("Shoot");
+        }
+    }
+
+    private void CancelActionIfNeeded()
+    {
+        if (isAiming || isShooting)
+        {
+            isAiming = false;
+            isShooting = false;
+            anim.SetTrigger("CancelAim");
         }
     }
 
@@ -113,6 +128,7 @@ public class EnemyArcherAI : MonoBehaviour
         
         Collider2D archerCollider = GetComponent<Collider2D>();
         Collider2D arrowCollider = arrowGO.GetComponent<Collider2D>();
+        
         if (archerCollider != null && arrowCollider != null)
         {
             Physics2D.IgnoreCollision(archerCollider, arrowCollider);

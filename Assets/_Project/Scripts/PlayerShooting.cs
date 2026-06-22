@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -7,20 +5,20 @@ public class PlayerShooting : MonoBehaviour
 {
     public Transform firePoint;
     public GameObject arrowPrefab;
-
     public float fireRate = 0.6f;
-    private float nextFireTime = 0f;
-
     public float arrowBaseSpeed = 25f;
-    public float aimDelayAfterStop = 0.15f;
-
+    
     public int currentArrows = 10;
     public TextMeshProUGUI ammoText;
+
+    public float aimDelayAfterStop = 0.15f;
 
     private Animator anim;
     private PlayerAiming playerAiming;
     private Vector2 queuedLaunchVelocity;
-
+    private Camera mainCam;
+    
+    private float nextFireTime = 0f;
     private float stopTimer = 0f;
 
     public bool IsFiringNow
@@ -37,6 +35,7 @@ public class PlayerShooting : MonoBehaviour
     {
         anim = GetComponent<Animator>();
         playerAiming = GetComponent<PlayerAiming>();
+        mainCam = Camera.main;
         UpdateAmmoUI();
     }
 
@@ -44,17 +43,17 @@ public class PlayerShooting : MonoBehaviour
     {
         if (playerAiming == null) return;
 
+        UpdateAimingAnimationState();
+        HandleShootingInput();
+    }
+
+    private void UpdateAimingAnimationState()
+    {
         float horizontalMove = Input.GetAxisRaw("Horizontal");
         bool isMoving = Mathf.Abs(horizontalMove) > 0.1f;
 
-        if (isMoving)
-        {
-            stopTimer = 0f;
-        }
-        else
-        {
-            stopTimer += Time.deltaTime;
-        }
+        if (isMoving) stopTimer = 0f;
+        else stopTimer += Time.deltaTime;
 
         if (stopTimer < aimDelayAfterStop || IsFiringNow)
         {
@@ -64,35 +63,30 @@ public class PlayerShooting : MonoBehaviour
         {
             anim.SetBool("IsAiming", playerAiming.IsAiming());
         }
+    }
 
-        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
+    private void HandleShootingInput()
+    {
+        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime && currentArrows > 0)
         {
-            if (currentArrows > 0)
-            {
-                nextFireTime = Time.time + fireRate;
+            nextFireTime = Time.time + fireRate;
 
-                RotateTowardsMouse();
-                queuedLaunchVelocity = CalculateBallisticVelocity(firePoint.position, playerAiming.GetAimPosition());
+            RotateTowardsMouse();
+            queuedLaunchVelocity = CalculateBallisticVelocity(firePoint.position, playerAiming.GetAimPosition());
 
-                anim.SetTrigger("Shoot");
-            }
+            anim.SetTrigger("Shoot");
         }
     }
 
-    void RotateTowardsMouse()
+    private void RotateTowardsMouse()
     {
-        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 mouseWorldPos = mainCam.ScreenToWorldPoint(Input.mousePosition);
         float directionToMouse = mouseWorldPos.x - transform.position.x;
+        
         Vector3 currentScale = transform.localScale;
-
-        if (directionToMouse > 0.1f)
-        {
-            currentScale.x = Mathf.Abs(currentScale.x);
-        }
-        else if (directionToMouse < -0.1f)
-        {
-            currentScale.x = -Mathf.Abs(currentScale.x);
-        }
+        if (directionToMouse > 0.1f) currentScale.x = Mathf.Abs(currentScale.x);
+        else if (directionToMouse < -0.1f) currentScale.x = -Mathf.Abs(currentScale.x);
+        
         transform.localScale = currentScale;
     }
 
@@ -106,15 +100,13 @@ public class PlayerShooting : MonoBehaviour
 
         Collider2D playerCollider = GetComponent<Collider2D>();
         Collider2D arrowCollider = arrowGO.GetComponent<Collider2D>();
+        
         if (playerCollider != null && arrowCollider != null)
         {
             Physics2D.IgnoreCollision(playerCollider, arrowCollider);
         }
 
-        if (arrow != null)
-        {
-            arrow.LaunchBallistic(queuedLaunchVelocity);
-        }
+        if (arrow != null) arrow.LaunchBallistic(queuedLaunchVelocity);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -124,7 +116,7 @@ public class PlayerShooting : MonoBehaviour
             currentArrows++;
             UpdateAmmoUI();
 
-            if (collision.name == "PickupZone")
+            if (collision.name == "PickupZone" && collision.transform.parent != null)
             {
                 Destroy(collision.transform.parent.gameObject);
             }
@@ -135,26 +127,18 @@ public class PlayerShooting : MonoBehaviour
         }
     }
 
-    void UpdateAmmoUI()
+    private void UpdateAmmoUI()
     {
-        if (ammoText != null)
-        {
-            ammoText.text = "x" + currentArrows;
-        }
+        if (ammoText != null) ammoText.text = "x" + currentArrows;
     }
 
-    Vector2 CalculateBallisticVelocity(Vector3 start, Vector3 target)
+    private Vector2 CalculateBallisticVelocity(Vector3 start, Vector3 target)
     {
         Vector2 displacement = new Vector2(target.x - start.x, target.y - start.y);
-        float distance = displacement.magnitude;
-
-        float time = distance / arrowBaseSpeed;
-        if (time < 0.05f) time = 0.05f;
-
-        float gravity = Physics2D.gravity.y * 1f;
+        float time = Mathf.Max(displacement.magnitude / arrowBaseSpeed, 0.05f);
 
         float vX = displacement.x / time;
-        float vY = (displacement.y - 0.5f * gravity * time * time) / time;
+        float vY = (displacement.y - 0.5f * Physics2D.gravity.y * time * time) / time;
 
         return new Vector2(vX, vY);
     }

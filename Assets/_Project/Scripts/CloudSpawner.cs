@@ -10,7 +10,6 @@ public class CloudSpawner : MonoBehaviour
     public float startX = -1200f;
     public float minY = 100f;
     public float maxY = 450f;
-
     public float minSpeed = 20f;
     public float maxSpeed = 60f;
     public float minSpawnTime = 1f;
@@ -20,7 +19,7 @@ public class CloudSpawner : MonoBehaviour
 
     void Start()
     {
-        timer = Random.Range(minSpawnTime, maxSpawnTime);
+        SetNextSpawnTime();
     }
 
     void Update()
@@ -29,17 +28,16 @@ public class CloudSpawner : MonoBehaviour
         if (timer <= 0)
         {
             SpawnCloud();
-            timer = Random.Range(minSpawnTime, maxSpawnTime);
+            SetNextSpawnTime();
         }
     }
 
-    void SpawnCloud()
+    private void SpawnCloud()
     {
         GameObject newCloud = Instantiate(cloudPrefab, cloudContainer);
         RectTransform rect = newCloud.GetComponent<RectTransform>();
 
-        float randomY = Random.Range(minY, maxY);
-        rect.anchoredPosition = new Vector2(startX, randomY);
+        rect.anchoredPosition = new Vector2(startX, Random.Range(minY, maxY));
 
         if (cloudSprites.Length > 0)
         {
@@ -49,8 +47,16 @@ public class CloudSpawner : MonoBehaviour
         }
 
         Cloud cloudScript = newCloud.GetComponent<Cloud>();
-        cloudScript.Initialize(Random.Range(minSpeed, maxSpeed));
+        if (cloudScript != null)
+        {
+            cloudScript.Initialize(Random.Range(minSpeed, maxSpeed));
+        }
         
         newCloud.transform.SetAsFirstSibling(); 
+    }
+
+    private void SetNextSpawnTime()
+    {
+        timer = Random.Range(minSpawnTime, maxSpawnTime);
     }
 }

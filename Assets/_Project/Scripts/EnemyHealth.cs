@@ -1,20 +1,18 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
     public int maxHealth = 3;
     public GameObject arrowLootPrefab;
+
     public float knockbackForceX = 5f;
     public float knockbackForceY = 2f;
 
     private int currentHealth;
-
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private Color originalColor;
-
     private EnemyAI enemyAI;
 
     void Start()
@@ -23,17 +21,30 @@ public class EnemyHealth : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
         enemyAI = GetComponent<EnemyAI>();
-        originalColor = spriteRenderer.color;
+
+        if (spriteRenderer != null) originalColor = spriteRenderer.color;
     }
 
     public void TakeDamage(int damage, Vector2 damageSourcePosition)
     {
+        ApplyDamage(damage);
+        ApplyKnockback(damageSourcePosition);
+    }
+
+    public void TakeDamage(int damage)
+    {
+        ApplyDamage(damage);
+    }
+
+    private void ApplyDamage(int damage)
+    {
         currentHealth -= damage;
 
-        ApplyKnockback(damageSourcePosition);
-
         StopAllCoroutines();
-        StartCoroutine(FlashRedSmooth());
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(FlashRedSmooth());
+        }
 
         if (currentHealth <= 0)
         {
@@ -43,35 +54,22 @@ public class EnemyHealth : MonoBehaviour
 
     private void ApplyKnockback(Vector2 sourcePos)
     {
-        if (rb == null || rb.bodyType != RigidbodyType2D.Dynamic) return; 
+        if (rb == null || rb.bodyType != RigidbodyType2D.Dynamic) return;
 
-        if (enemyAI != null)
-        {
-            enemyAI.knockbackTimer = 0.3f;
-        }
+        if (enemyAI != null) enemyAI.knockbackTimer = 0.3f;
+
         float knockbackDirection = transform.position.x < sourcePos.x ? -1f : 1f;
         rb.velocity = Vector2.zero;
         rb.AddForce(new Vector2(knockbackForceX * knockbackDirection, knockbackForceY), ForceMode2D.Impulse);
     }
 
-    public void TakeDamage(int damage)
-    {
-        currentHealth -= damage;
-
-        StopAllCoroutines();
-        StartCoroutine(FlashRedSmooth());
-
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
-    }
-
     private IEnumerator FlashRedSmooth()
     {
-        float duration = 0.2f;
+        if (spriteRenderer == null) yield break;
 
+        float duration = 0.2f;
         float timer = 0f;
+
         while (timer < duration)
         {
             timer += Time.deltaTime;
@@ -90,7 +88,7 @@ public class EnemyHealth : MonoBehaviour
         spriteRenderer.color = originalColor;
     }
 
-    void Die()
+    private void Die()
     {
         if (enemyAI != null) enemyAI.enabled = false;
 
@@ -110,8 +108,6 @@ public class EnemyHealth : MonoBehaviour
         if (anim != null)
         {
             anim.Rebind();
-            anim.Update(0f);
-            anim.enabled = false;
         }
 
         StartCoroutine(FadeOutDeath());
@@ -119,6 +115,8 @@ public class EnemyHealth : MonoBehaviour
 
     private IEnumerator FadeOutDeath()
     {
+        if (spriteRenderer == null) yield break;
+
         float timer = 0f;
         float duration = 1.0f;
         Color startColor = spriteRenderer.color;
@@ -139,6 +137,7 @@ public class EnemyHealth : MonoBehaviour
         {
             Instantiate(arrowLootPrefab, transform.position, Quaternion.identity);
         }
+
         Destroy(gameObject);
     }
 }
