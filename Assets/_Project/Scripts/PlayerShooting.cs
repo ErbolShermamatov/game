@@ -21,7 +21,6 @@ public class PlayerShooting : MonoBehaviour
     private PlayerAiming playerAiming;
     private Vector2 queuedLaunchVelocity;
 
-    private bool isTriggeringShot = false;
     private float stopTimer = 0f;
 
     public bool IsFiringNow
@@ -30,8 +29,7 @@ public class PlayerShooting : MonoBehaviour
         {
             if (anim == null) return false;
             return anim.GetCurrentAnimatorStateInfo(0).IsName("Archer_Fire") ||
-                   anim.GetCurrentAnimatorStateInfo(0).IsName("Archer_QuickDraw") ||
-                   isTriggeringShot;
+                   anim.GetCurrentAnimatorStateInfo(0).IsName("Archer_QuickDraw");
         }
     }
 
@@ -45,12 +43,6 @@ public class PlayerShooting : MonoBehaviour
     void Update()
     {
         if (playerAiming == null) return;
-
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Archer_Fire") ||
-            anim.GetCurrentAnimatorStateInfo(0).IsName("Archer_QuickDraw"))
-        {
-            isTriggeringShot = false;
-        }
 
         float horizontalMove = Input.GetAxisRaw("Horizontal");
         bool isMoving = Mathf.Abs(horizontalMove) > 0.1f;
@@ -73,17 +65,17 @@ public class PlayerShooting : MonoBehaviour
             anim.SetBool("IsAiming", playerAiming.IsAiming());
         }
 
-        if (playerAiming.IsAiming() && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime && currentArrows > 0)
+        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
         {
-            if (IsFiringNow) return;
+            if (currentArrows > 0)
+            {
+                nextFireTime = Time.time + fireRate;
 
-            isTriggeringShot = true;
-            nextFireTime = Time.time + fireRate;
+                RotateTowardsMouse();
+                queuedLaunchVelocity = CalculateBallisticVelocity(firePoint.position, playerAiming.GetAimPosition());
 
-            RotateTowardsMouse();
-            queuedLaunchVelocity = CalculateBallisticVelocity(firePoint.position, playerAiming.GetAimPosition());
-
-            anim.SetTrigger("Shoot");
+                anim.SetTrigger("Shoot");
+            }
         }
     }
 
@@ -131,7 +123,15 @@ public class PlayerShooting : MonoBehaviour
         {
             currentArrows++;
             UpdateAmmoUI();
-            Destroy(collision.gameObject);
+
+            if (collision.name == "PickupZone")
+            {
+                Destroy(collision.transform.parent.gameObject);
+            }
+            else
+            {
+                Destroy(collision.gameObject);
+            }
         }
     }
 

@@ -7,6 +7,7 @@ public class Arrow : MonoBehaviour
     public float lifetime = 5f;
     private Rigidbody2D rb;
     private bool isLaunched = false;
+    public bool isEnemyArrow = false;
     private bool isStuck = false;
     public float embedDepth = 0.4f;
 
@@ -44,20 +45,34 @@ public class Arrow : MonoBehaviour
     {
         if (isStuck) return;
 
-        if (collision.CompareTag("Player")) return;
-
         if (collision.CompareTag("Ground"))
         {
             StickIntoGround(collision.transform);
             return;
         }
 
-        EnemyHealth enemy = collision.GetComponent<EnemyHealth>();
-
-        if (enemy != null)
+        if (isEnemyArrow)
         {
-            enemy.TakeDamage(1, transform.position);
-            Destroy(gameObject);
+            if (collision.CompareTag("Player"))
+            {
+                PlayerHealth playerHealth = collision.GetComponent<PlayerHealth>();
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(1, transform);
+                    Destroy(gameObject);
+                }
+            }
+        }
+        else
+        {
+            if (collision.CompareTag("Player")) return;
+
+            EnemyHealth enemy = collision.GetComponent<EnemyHealth>();
+            if (enemy != null)
+            {
+                enemy.TakeDamage(1, transform.position);
+                Destroy(gameObject);
+            }
         }
     }
 

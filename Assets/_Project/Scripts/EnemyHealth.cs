@@ -43,7 +43,8 @@ public class EnemyHealth : MonoBehaviour
 
     private void ApplyKnockback(Vector2 sourcePos)
     {
-        if (rb == null) return;
+        if (rb == null || rb.bodyType != RigidbodyType2D.Dynamic) return; 
+
         if (enemyAI != null)
         {
             enemyAI.knockbackTimer = 0.3f;
@@ -93,7 +94,10 @@ public class EnemyHealth : MonoBehaviour
     {
         if (enemyAI != null) enemyAI.enabled = false;
 
-        if (rb != null)
+        EnemyArcherAI archerAI = GetComponent<EnemyArcherAI>();
+        if (archerAI != null) archerAI.SetDead();
+
+        if (rb != null && rb.bodyType == RigidbodyType2D.Dynamic)
         {
             rb.velocity = Vector2.zero;
             rb.simulated = false;
@@ -105,8 +109,9 @@ public class EnemyHealth : MonoBehaviour
         Animator anim = GetComponent<Animator>();
         if (anim != null)
         {
-            anim.Play("Warrior_Idle");
-            anim.SetFloat("Speed", 0f);
+            anim.Rebind();
+            anim.Update(0f);
+            anim.enabled = false;
         }
 
         StartCoroutine(FadeOutDeath());
